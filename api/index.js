@@ -15,7 +15,7 @@ app.post("/sms", async (req, res) => {
   try {
     console.log(res.body);
     const message = await client.messages.create({
-      body: "Hi Chippy",
+      body: res.body,
       from: accountPhone,
       to: "+14809979631",
     });
