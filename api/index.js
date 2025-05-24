@@ -15,6 +15,10 @@ const LOOM_REGEX = /https:\/\/www\.loom\.com\/share\/[\w-]+/i;
 
 app.post("/sms", async (req, res) => {
   const twiml = new MessagingResponse();
+  const message = twiml.message();
+  message.body("The Robots are coming! Head for the hills!");
+  res.type("text/xml").send(twiml.toString());
+  return;
   // const from = req.body.From.replace(/\D/g, ""); // normalize to digits only
   const messageBody = req.body.Body;
   console.log(messageBody);
