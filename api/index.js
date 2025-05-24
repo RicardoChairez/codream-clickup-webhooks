@@ -6,6 +6,11 @@ const bodyParser = require("body-parser");
 
 const app = express();
 app.use(express.json());
+app.use(
+  express.urlencoded({
+    extended: true,
+  })
+);
 
 const LOOM_REGEX = /https:\/\/www\.loom\.com\/share\/[\w-]+/i;
 // const CLICKUP_API = "https://api.clickup.com/api/v2";
