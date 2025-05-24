@@ -22,7 +22,7 @@ app.post("/sms", async (req, res) => {
     // .then((message) => console.log(message.sid));
 
     console.log("Message sent:", message.sid);
-    res.status(200).json({ message: "SMS sent", sid: message.sid });
+    res.status(200).json(res.body);
   } catch (err) {
     console.error("Error:", err.message);
     res.status(500).json({ error: "Failed to send SMS" });
