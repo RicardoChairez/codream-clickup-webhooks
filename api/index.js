@@ -16,7 +16,7 @@ app.post("/sms", async (req, res) => {
     console.log(body.json);
     // const body = `New task created: ${req.body?.task?.name || "Unnamed Task"}`;
     const message = await client.messages.create({
-      body: res.body?.status || "",
+      body: "hiiiiii",
       from: accountPhone,
       to: "+14809979631",
     });
