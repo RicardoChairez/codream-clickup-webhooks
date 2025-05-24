@@ -13,8 +13,10 @@ const client = require("twilio")(accountSid, authToken);
 
 app.post("/sms", async (req, res) => {
   try {
+    console.log(body.json);
+    // const body = `New task created: ${req.body?.task?.name || "Unnamed Task"}`;
     const message = await client.messages.create({
-      body: "Hi Chippy",
+      body: res.body?.status || "",
       from: accountPhone,
       to: "+14809979631",
     });
