@@ -15,6 +15,8 @@ app.use(
 const LOOM_REGEX = /https:\/\/www\.loom\.com\/share\/[\w-]+/i;
 const CLICKUP_API = "https://api.clickup.com/api/v2";
 const HEADERS = {
+  accept: "application/json",
+  "content-type": "application/json",
   Authorization: "pk_94038958_KYJ2R3SMI7UEYZ0FH069SOR21A2E6YBW",
 };
 
@@ -22,7 +24,6 @@ app.post("/sms", async (req, res) => {
   const twiml = new MessagingResponse();
   const from = String(req.body.From).replace(/\D/g, "");
   const messageBody = req.body.Body;
-  console.log(messageBody);
 
   // console.log("📩 Incoming SMS from", from);
 
@@ -65,7 +66,7 @@ async function findTaskIdByPhoneNumber(phone) {
   for (const task of tasks) {
     const match = task.custom_fields.find(
       (field) =>
-        field.name === "phone" && field.value?.replace(/\D/g, "") === phone
+        field.name === "Phone" && field.value?.replace(/\D/g, "") === phone
     );
 
     if (match) {
@@ -84,13 +85,22 @@ async function updateLoomLink(task, loomUrl) {
       break;
     }
   }
-  return axios.put(
-    `${CLICKUP_API}/task/${task.id}/field/${loomFieldID}`,
-    {
-      value: loomUrl,
+
+  const options = {
+    method: "POST",
+    url: `${CLICKUP_API}/task/${task.id}/field/${loomFieldID}`,
+    headers: {
+      accept: "application/json",
+      "content-type": "application/json",
+      Authorization: "pk_94038958_KYJ2R3SMI7UEYZ0FH069SOR21A2E6YBW",
     },
-    { headers: HEADERS }
-  );
+    data: { value: loomUrl },
+  };
+
+  return axios
+    .request(options)
+    .then((res) => console.log(res.data))
+    .catch((err) => console.error(err));
 }
 
 app.listen(3000, () => console.log("Server ready on port 3000."));
