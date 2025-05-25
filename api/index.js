@@ -1,7 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const { MessagingResponse } = require("twilio").twiml;
-// const axios = require("axios");
+const axios = require("axios");
 const bodyParser = require("body-parser");
 
 const app = express();
@@ -13,14 +13,16 @@ app.use(
 );
 
 const LOOM_REGEX = /https:\/\/www\.loom\.com\/share\/[\w-]+/i;
-// const CLICKUP_API = "https://api.clickup.com/api/v2";
-// const HEADERS = {
-// Authorization: process.env.CLICKUP_TOKEN,
-// };
+const CLICKUP_API = "https://api.clickup.com/api/v2";
+const HEADERS = {
+  Authorization: "pk_94038958_KYJ2R3SMI7UEYZ0FH069SOR21A2E6YBW",
+};
 
 app.post("/sms", async (req, res) => {
   const twiml = new MessagingResponse();
-  // const from = req.body.From.replace(/\D/g, ""); // normalize to digits only
+  const from = String(req.body.From).replace(/\D/g, "");
+  twiml.message(from);
+  return res.type("text/xml").send(twiml.toString());
   const messageBody = req.body.Body;
   console.log(messageBody);
 
@@ -35,12 +37,11 @@ app.post("/sms", async (req, res) => {
   const loomUrl = loomMatch[0];
 
   try {
-    // const taskId = await findTaskIdByPhoneNumber(from);
-    // if (!taskId) {
-    // twiml.message("⚠️ No ClickUp task found for this phone number.");
-    twiml.message(loomUrl);
-    return res.type("text/xml").send(twiml.toString());
-    // }
+    const taskId = await findTaskIdByPhoneNumber(from);
+    if (!taskId) {
+      twiml.message("⚠️ No ClickUp task found for this phone number.");
+      return res.type("text/xml").send(twiml.toString());
+    }
 
     // await updateLoomLink(taskId, loomUrl);
 
@@ -53,33 +54,35 @@ app.post("/sms", async (req, res) => {
   }
 });
 
-// async function findTaskIdByPhoneNumber(phone) {
-//   const response = await axios.get(
-//     `${CLICKUP_API}/list/${process.env.CLICKUP_LIST_ID}/task`,
-//     {
-//       headers: HEADERS,
-//       params: {
-//         include_subtasks: true,
-//       },
-//     }
-//   );
+async function findTaskIdByPhoneNumber(phone) {
+  const response = await axios.get(`${CLICKUP_API}/list/901309149210/task`, {
+    headers: HEADERS,
+    params: {
+      include_subtasks: true,
+    },
+  });
 
-//   const tasks = response.data.tasks;
+  const tasks = response.data.tasks;
 
-//   for (const task of tasks) {
-//     const match = task.custom_fields.find(
-//       (field) =>
-//         field.id === process.env.PHONE_FIELD_ID &&
-//         field.value?.replace(/\D/g, "") === phone
-//     );
+  for (const task of tasks) {
+    const match = task.custom_fields.find(
+      (field) =>
+        field.id === process.env.PHONE_FIELD_ID &&
+        field.value?.replace(/\D/g, "") === phone
+    );
+    for (const field of task.custom_fields) {
+      if (field.name === "phone ") {
+        console.log(field.value);
+      }
+    }
 
-//     if (match) {
-//       return task.id;
-//     }
-//   }
+    // if (match) {
+    //   return task.id;
+    // }
+  }
 
-//   return null;
-// }
+  return null;
+}
 
 // async function updateLoomLink(taskId, loomUrl) {
 //   return axios.put(
