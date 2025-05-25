@@ -29,8 +29,7 @@ app.post("/sms", async (req, res) => {
 
   const loomMatch = messageBody.match(LOOM_REGEX);
   if (!loomMatch) {
-    twiml.message("❌ No Loom link found in your message.");
-    return res.type("text/xml").send(twiml.toString());
+    return res.status(400)({ message: "No Loom Link found in message" });
   }
 
   const loomUrl = loomMatch[0];
@@ -38,8 +37,9 @@ app.post("/sms", async (req, res) => {
   try {
     const task = await findTaskIdByPhoneNumber(from);
     if (!task) {
-      twiml.message("⚠️ No ClickUp task found for this phone number.");
-      return res.type("text/xml").send(twiml.toString());
+      return res.status(400)({
+        message: "No ClickUp task associated with this phone number",
+      });
     }
 
     await updateLoomLink(task, loomUrl);
@@ -48,8 +48,9 @@ app.post("/sms", async (req, res) => {
     res.type("text/xml").send(twiml.toString());
   } catch (error) {
     console.error("Error:", error.response?.data || error.message);
-    twiml.message("🚫 Something went wrong while updating the task.");
-    res.type("text/xml").send(twiml.toString());
+    return res.status(500)({
+      message: "Something went wrong while updating the tasm",
+    });
   }
 });
 
