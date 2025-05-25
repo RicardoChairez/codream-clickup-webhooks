@@ -21,8 +21,6 @@ const HEADERS = {
 app.post("/sms", async (req, res) => {
   const twiml = new MessagingResponse();
   const from = String(req.body.From).replace(/\D/g, "");
-  twiml.message(from);
-  return res.type("text/xml").send(twiml.toString());
   const messageBody = req.body.Body;
   console.log(messageBody);
 
@@ -67,18 +65,17 @@ async function findTaskIdByPhoneNumber(phone) {
   for (const task of tasks) {
     const match = task.custom_fields.find(
       (field) =>
-        field.id === process.env.PHONE_FIELD_ID &&
-        field.value?.replace(/\D/g, "") === phone
+        field.name === "phone " && field.value?.replace(/\D/g, "") === phone
     );
-    for (const field of task.custom_fields) {
-      if (field.name === "phone ") {
-        console.log(field.value);
-      }
-    }
-
-    // if (match) {
-    //   return task.id;
+    // for (const field of task.custom_fields) {
+    //   if (field.name === "phone ") {
+    //     console.log(field.value);
+    //   }
     // }
+
+    if (match) {
+      return task.id;
+    }
   }
 
   return null;
