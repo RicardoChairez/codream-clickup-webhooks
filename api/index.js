@@ -35,13 +35,13 @@ app.post("/sms", async (req, res) => {
   const loomUrl = loomMatch[0];
 
   try {
-    const taskId = await findTaskIdByPhoneNumber(from);
-    if (!taskId) {
+    const task = await findTaskIdByPhoneNumber(from);
+    if (!task) {
       twiml.message("⚠️ No ClickUp task found for this phone number.");
       return res.type("text/xml").send(twiml.toString());
     }
 
-    // await updateLoomLink(taskId, loomUrl);
+    await updateLoomLink(task, loomUrl);
 
     twiml.message("Your loom has been received! Thank you.");
     res.type("text/xml").send(twiml.toString());
@@ -65,31 +65,33 @@ async function findTaskIdByPhoneNumber(phone) {
   for (const task of tasks) {
     const match = task.custom_fields.find(
       (field) =>
-        field.name === "phone " && field.value?.replace(/\D/g, "") === phone
+        field.name === "phone" && field.value?.replace(/\D/g, "") === phone
     );
-    // for (const field of task.custom_fields) {
-    //   if (field.name === "phone ") {
-    //     console.log(field.value);
-    //   }
-    // }
 
     if (match) {
-      return task.id;
+      return task;
     }
   }
 
   return null;
 }
 
-// async function updateLoomLink(taskId, loomUrl) {
-//   return axios.put(
-//     `${CLICKUP_API}/task/${taskId}/field/${process.env.LOOM_FIELD_ID}`,
-//     {
-//       value: loomUrl,
-//     },
-//     { headers: HEADERS }
-//   );
-// }
+async function updateLoomLink(task, loomUrl) {
+  var loomFieldID;
+  for (const field of task.custom_fields) {
+    if (field.name === "Loom") {
+      loomFieldID = field.id;
+      break;
+    }
+  }
+  return axios.put(
+    `${CLICKUP_API}/task/${task.id}/field/${loomFieldID}`,
+    {
+      value: loomUrl,
+    },
+    { headers: HEADERS }
+  );
+}
 
 app.listen(3000, () => console.log("Server ready on port 3000."));
 
