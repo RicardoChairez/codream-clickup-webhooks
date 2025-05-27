@@ -19,37 +19,38 @@ const CLICKUP_API = "https://api.clickup.com/api/v2";
 
 app.post("/sms", async (req, res) => {
   const phone = String(req.body.From).replace(/\D/g, "");
-  // const messages = await getSmsLogForNumber("+" + phone);
   const body = req.body.Body;
-  await searchAndPostClickUpComment(phone, body);
+  try {
+    await searchAndPostClickUpComment(phone, body);
+  } catch (err) {
+    res.status(400);
+  }
+
   res.status(200).json(phone);
 });
 
-async function getSmsLogForNumber(phoneNumber) {
-  const messages = await client.messages.list({ limit: 1000 }); // Optional: paginate manually if needed
-  const filtered = messages.filter(
-    (msg) => msg.to === phoneNumber || msg.from === phoneNumber
-  );
-  const simplifiedMessages = filtered.map((msg) => ({
-    body: msg.body,
-    direction: msg.direction,
-    from: msg.from,
-    to: msg.to,
-    dateSent: msg.dateSent,
-    status: msg.status,
-    sid: msg.sid,
-  }));
-  return simplifiedMessages;
-}
+// async function getSmsLogForNumber(phoneNumber) {
+//   const messages = await client.messages.list({ limit: 1000 }); // Optional: paginate manually if needed
+//   const filtered = messages.filter(
+//     (msg) => msg.to === phoneNumber || msg.from === phoneNumber
+//   );
+//   const simplifiedMessages = filtered.map((msg) => ({
+//     body: msg.body,
+//     direction: msg.direction,
+//     from: msg.from,
+//     to: msg.to,
+//     dateSent: msg.dateSent,
+//     status: msg.status,
+//     sid: msg.sid,
+//   }));
+//   return simplifiedMessages;
+// }
 
 async function searchAndPostClickUpComment(phone, body) {
   try {
     const task = await findTaskByPhoneNumber(phone);
     const taskId = task.id;
-    const now = new Date();
-    const comment = `${
-      task.name
-    } sent via SMS:\n\n${body}\n\n${now.toString()}`;
+    const comment = `${task.name} sent via SMS:\n\n${body}`;
     const options = {
       method: "POST",
       url: `${CLICKUP_API}/task/${task.id}/comment?custom_task_ids=false}`,
