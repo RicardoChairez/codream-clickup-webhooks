@@ -61,7 +61,7 @@ async function searchAndUpdateClickUpTask(phone, messages) {
         "content-type": "application/json",
         Authorization: process.env.CLICKUP_KEY,
       },
-      data: { value: JSON.stringify(messages) },
+      data: { value: JSON.stringify(messages) + " " },
     };
 
     return axios
