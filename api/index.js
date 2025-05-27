@@ -19,8 +19,9 @@ const CLICKUP_API = "https://api.clickup.com/api/v2";
 
 app.post("/sms", async (req, res) => {
   const phone = String(req.body.From).replace(/\D/g, "");
-  const messages = await getSmsLogForNumber("+" + phone);
-  await searchAndUpdateClickUpTask(phone, messages);
+  // const messages = await getSmsLogForNumber("+" + phone);
+  const body = req.body.Body;
+  await searchAndPostClickUpComment(phone, body);
   res.status(200).json(phone);
 });
 
@@ -41,27 +42,23 @@ async function getSmsLogForNumber(phoneNumber) {
   return simplifiedMessages;
 }
 
-async function searchAndUpdateClickUpTask(phone, messages) {
+async function searchAndPostClickUpComment(phone, body) {
   try {
     const task = await findTaskByPhoneNumber(phone);
     const taskId = task.id;
-
-    // var smsLogFieldID;
-    // for (const field of task.custom_fields) {
-    //   if (field.name === "SMS Log JSON") {
-    //     smsLogFieldID = field.id;
-    //     break;
-    //   }
-    // }
+    const now = new Date();
+    const comment = `${
+      task.name
+    } sent via SMS:\n\n${body}\n\n${now.toString()}`;
     const options = {
       method: "POST",
-      url: `${CLICKUP_API}/task/${task.id}/field/${process.env.CLICKUP_SMS_FIELD_ID}`,
+      url: `${CLICKUP_API}/task/${task.id}/comment?custom_task_ids=false}`,
       headers: {
         accept: "application/json",
         "content-type": "application/json",
         Authorization: process.env.CLICKUP_KEY,
       },
-      data: { value: JSON.stringify(messages) + " " },
+      data: { notify_all: false, comment_text: comment },
     };
 
     return axios
